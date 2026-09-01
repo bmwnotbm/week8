@@ -1,0 +1,15 @@
+﻿stage,check,row_count,note
+combine_orders,concat ม.ค.+ก.พ.,752,รวม orders_2026_01 (361) + orders_2026_02 (391) = 752 แถว
+clean_orders,exact duplicate rows,2,แถวซ้ำทุกคอลัมน์ทุกประการ — ลบออก เก็บแถวหลังสุด
+clean_orders,unit_price ว่าง (missing),2,ไม่สามารถคำนวณ net_sales ได้ — คัดออก
+clean_orders,quantity <= 0,2,ผิดกติกาธุรกิจ (quantity ต้อง > 0) — คัดออก
+clean_customers,duplicate customer_id (exact),3,แถวซ้ำ customer_id เดิมทุกค่า — เก็บแถวแรก
+clean_customers,email ว่าง (missing),5,คงไว้ในตาราง (merge ใช้ customer_id) แต่ไม่มีอีเมลสำหรับติดต่อ
+clean_customers,standardize province,160,รวมชื่อจังหวัดจาก 14 รูปแบบ เหลือ 6 ค่ามาตรฐาน
+clean_payments,duplicate order_id ใน payments,1,order_id เดียวกันมีหลาย payment event — เก็บ event ล่าสุด
+integrate,orders x customers (m:1),22,customer_id ไม่พบใน Master Data: 22 แถว | matched: 724 แถว
+integrate,orders x products (m:1),2,product_id ไม่พบใน Master Data: 2 แถว | matched: 744 แถว
+integrate,orders x payments (1:1),0,order_id ไม่พบ payment event: 0 แถว | matched: 746 แถว
+integrate,referential integrity (customer & product ต้อง match),24,customer_id หรือ product_id ไม่พบใน Master Data — คัดออกจาก fact table
+validate,payment_status != PAID (ไม่นับเป็นยอดขาย),62,รวมอยู่ใน fact_sales เพื่อการตรวจสอบย้อนกลับ แต่ถูกคัดออกจากยอดขายสุทธิ (ใช้ is_paid_sale=False กรองใน summary)
+validate,ธุรกรรมที่นับเป็นยอดขายจริง (PAID),660,"ยอดขายสุทธิรวม = 10,224,044.08 บาท"

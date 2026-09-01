@@ -1,0 +1,40 @@
+TechTrove
+
+Q1: หลังรวมไฟล์ orders (concat ม.ค.+ก.พ.) มี 752 แถว หลังลบ duplicate (exact duplicate 2 แถว + duplicate order_id 0 แถว) เหลือ 750 แถว ก่อนกรองกติกาตัวเลขอื่น (ตัวเลขสุดท้ายหลัง validate ครบทุกกติกา = 746 แถว)
+
+Q2: customer_id ไม่พบใน Master Data = 22 แถว, product_id ไม่พบใน Master Data = 2 แถว (นับจาก 746 แถวที่ผ่านการทำความสะอาดแล้ว)
+
+Q3: ยอดขายที่ใช้ได้จริง (payment_status = PAID) มี 660 ธุรกรรม ยอดขายสุทธิรวม = 10,224,044.08 บาท
+
+Q4: จังหวัดที่มียอดขายสุทธิสูงสุดคือ 'กรุงเทพมหานคร' = 2,612,955.87 บาท
+
+Q5: หมวดสินค้าที่มียอดขายสุทธิสูงสุดคือ 'Smartphone' = 3,092,117.34 บาท
+
+Q6: หากสลับลำดับเป็น merge ก่อน cleaning ผลลัพธ์ที่ได้จะมีคุณภาพต่ำลงและความเชื่อมั่นลดลง เพราะ:
+     (1) แถวซ้ำ (duplicate order_id/exact-duplicate) และ discount/quantity/unit_price ที่ผิดกติกา ยังไม่ถูกกรอง ทำให้ merge สร้างแถวผลลัพธ์ที่ไม่ถูกต้อง (เช่น net_sales คำนวณจากข้อมูลขยะ) และอาจทำให้ยอดขายสุทธิเพี้ยนได้ทั้งสูงหรือต่ำเกินจริง
+     (2) province/email ที่ยังไม่ standardize จะทำให้ summary_by_province แตกเป็นหลายกลุ่มย่อยที่จริงๆ คือจังหวัดเดียวกัน (เช่น 'Bangkok' กับ 'กรุงเทพมหานคร' จะถูกนับแยกกัน) ทำให้ผลวิเคราะห์คลาดเคลื่อน
+     (3) validate='m:1'/'1:1' และ referential-integrity check จะตรวจจับปัญหาได้ยากขึ้น เพราะ dirty data อาจบังเอิญ merge ผ่านแบบผิดๆ (เช่น key ซ้ำที่ยังไม่ dedup ทำให้เกิด duplication แบบ m:m โดยไม่ได้ตั้งใจ)
+     สรุป: การ clean ก่อน merge (validate-first) ทำให้ผลลัพธ์ตรวจสอบย้อนกลับได้และเชื่อถือได้มากกว่า merge ก่อน clean
+
+สรุปคุณภาพข้อมูล ก่อน/หลัง Integration
+
+BEFORE (raw):
+  orders_2026_01_rows: 361
+  orders_2026_02_rows: 391
+  orders_total_raw: 752
+  customers_rows: 163
+  customers_duplicate_rows: 0
+  customers_missing_email: 5
+  products_rows: 40
+  payments_rows: 752
+  payments_duplicate_order_id: 1
+
+AFTER (integrated & validated):
+  orders_combined_raw: 752
+  orders_after_dedup_and_validation: 746
+  customers_after_dedup: 160
+  products_after_dedup: 40
+  payments_after_dedup: 751
+  fact_sales_rows: 722
+  paid_transactions: 660
+  total_net_sales_paid: 10224044.08
