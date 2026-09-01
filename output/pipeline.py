@@ -1,15 +1,3 @@
-# -*- coding: utf-8 -*-
-"""
-TechTrove E-Commerce — Data Integration Pipeline
-Data Engineer: [ใส่ชื่อ-รหัสนิสิต]
-
-รันได้ตั้งแต่ต้นจนจบด้วย:
-    pip install -r requirements.txt
-    python pipeline.py
-
-ผลลัพธ์ทั้งหมดจะถูกเขียนลงโฟลเดอร์ ./output
-"""
-
 from pathlib import Path
 import json
 import numpy as np
