@@ -10,8 +10,7 @@ DATA = Path(__file__).parent / "data"
 OUTPUT = Path(__file__).parent / "output"
 OUTPUT.mkdir(exist_ok=True)
 
-# เก็บทุกเหตุการณ์ cleaning/exclusion ไว้ที่นี่ เพื่อสร้าง data_quality_report.csv
-# ทำให้ทุกแถวที่ถูกคัดออก/แก้ไข สามารถตรวจสอบย้อนกลับได้ (traceability)
+
 dq_log = []
 
 
@@ -422,62 +421,7 @@ for k, v in before_summary.items():
 print("\nAFTER (integrated & validated):")
 for k, v in after_summary.items():
     print(f"  {k}: {v}")
-
-# =========================================================================
-# คำตอบคำถามวิเคราะห์ 6 ข้อ
-# =========================================================================
-print("\n" + "=" * 80)
-print("คำถามวิเคราะห์ 6 ข้อ")
-print("=" * 80)
-
-q1 = (
-    f"Q1: หลังรวมไฟล์ orders (concat ม.ค.+ก.พ.) มี {n_after_concat} แถว "
-    f"หลังลบ duplicate (exact duplicate {n_exact_dupes} แถว + duplicate order_id {n_orderid_dupe} แถว) "
-    f"เหลือ {n_after_concat - n_exact_dupes - n_orderid_dupe} แถว ก่อนกรองกติกาตัวเลขอื่น "
-    f"(ตัวเลขสุดท้ายหลัง validate ครบทุกกติกา = {len(orders_clean)} แถว)"
-)
-q2 = (
-    f"Q2: customer_id ไม่พบใน Master Data = {n_customer_unmatched} แถว, "
-    f"product_id ไม่พบใน Master Data = {n_product_unmatched} แถว "
-    f"(นับจาก {len(orders_clean)} แถวที่ผ่านการทำความสะอาดแล้ว)"
-)
-q3 = (
-    f"Q3: ยอดขายที่ใช้ได้จริง (payment_status = PAID) มี {n_paid} ธุรกรรม "
-    f"ยอดขายสุทธิรวม = {paid_sales['net_sales'].sum():,.2f} บาท"
-)
-top_province = summary_by_province.iloc[0]
-q4 = f"Q4: จังหวัดที่มียอดขายสุทธิสูงสุดคือ '{top_province['province']}' = {top_province['net_sales']:,.2f} บาท"
-top_category = summary_by_category.iloc[0]
-q5 = f"Q5: หมวดสินค้าที่มียอดขายสุทธิสูงสุดคือ '{top_category['category']}' = {top_category['net_sales']:,.2f} บาท"
-q6 = (
-    "Q6: หากสลับลำดับเป็น merge ก่อน cleaning ผลลัพธ์ที่ได้จะมีคุณภาพต่ำลงและความเชื่อมั่นลดลง เพราะ:\n"
-    "     (1) แถวซ้ำ (duplicate order_id/exact-duplicate) และ discount/quantity/unit_price ที่ผิดกติกา "
-    "ยังไม่ถูกกรอง ทำให้ merge สร้างแถวผลลัพธ์ที่ไม่ถูกต้อง (เช่น net_sales คำนวณจากข้อมูลขยะ) และอาจทำให้ยอดขายสุทธิเพี้ยนได้ทั้งสูงหรือต่ำเกินจริง\n"
-    "     (2) province/email ที่ยังไม่ standardize จะทำให้ summary_by_province แตกเป็นหลายกลุ่มย่อยที่จริงๆ คือจังหวัดเดียวกัน "
-    "(เช่น 'Bangkok' กับ 'กรุงเทพมหานคร' จะถูกนับแยกกัน) ทำให้ผลวิเคราะห์คลาดเคลื่อน\n"
-    "     (3) validate='m:1'/'1:1' และ referential-integrity check จะตรวจจับปัญหาได้ยากขึ้น เพราะ dirty data "
-    "อาจบังเอิญ merge ผ่านแบบผิดๆ (เช่น key ซ้ำที่ยังไม่ dedup ทำให้เกิด duplication แบบ m:m โดยไม่ได้ตั้งใจ)\n"
-    "     สรุป: การ clean ก่อน merge (validate-first) ทำให้ผลลัพธ์ตรวจสอบย้อนกลับได้และเชื่อถือได้มากกว่า merge ก่อน clean"
-)
-
-for q in [q1, q2, q3, q4, q5, q6]:
-    print("\n" + q)
-
-with open(OUTPUT / "analysis_answers.txt", "w", encoding="utf-8") as f:
-    f.write("TechTrove — คำตอบคำถามวิเคราะห์ 6 ข้อ\n")
-    f.write("=" * 60 + "\n\n")
-    for q in [q1, q2, q3, q4, q5, q6]:
-        f.write(q + "\n\n")
-    f.write("=" * 60 + "\n")
-    f.write("สรุปคุณภาพข้อมูล ก่อน/หลัง Integration\n")
-    f.write("=" * 60 + "\n\nBEFORE (raw):\n")
-    for k, v in before_summary.items():
-        f.write(f"  {k}: {v}\n")
-    f.write("\nAFTER (integrated & validated):\n")
-    for k, v in after_summary.items():
-        f.write(f"  {k}: {v}\n")
-
-print("\nเขียนไฟล์: summary_by_province.csv, summary_by_category.csv, analysis_answers.txt")
+print("\nเขียนไฟล์: summary_by_province.csv, summary_by_category.csv")
 
 # =========================================================================
 # CHALLENGE (+2): validate_data() และ data-quality funnel
